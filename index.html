@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>India's International Airports</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background-color: #003366;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 10px;
+            position: relative;
+        }
+        header img {
+            height: 100px;
+        }
+        .header-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 30px;
+            font-weight: bold;
+        }
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+        #dropdown-container {
+            position: absolute;
+            top: 115px;
+            left: 45px;
+            z-index: 1000;
+            background: green;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.2);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="images/plane.png" alt="Logo"> <!-- Update to valid relative path -->
+    <div class="header-title">India's International Airports</div>
+</header>
+
+<div id="dropdown-container">
+    <label for="airportSelect">Select Airport:</label>
+    <select id="airportSelect">
+        <option value="">-- Choose an Airport --</option>
+        <option value="mangalore">Mangalore, Karnataka</option>
+        <option value="guwahati">Guwahati, Assam</option>
+        <option value="ahmedabad">Ahmedabad, Gujarat</option>
+    </select>
+</div>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([22.9734, 78.6569], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let currentLayer;
+
+    // Exact GeoServer layer names (workspace:layername)
+    const airportData = {
+        mangalore: {
+            layer: "International_Airports:Mangalore_International_Airport", // Check this name in GeoServer
+            coords: [12.9611, 74.8900],
+            zoom: 14.5
+        },
+        guwahati: {
+            layer: "International_Airports:LGBInternational_Airport_Guwahati_Assam",
+            coords: [26.1061, 91.5859],
+            zoom: 14.5
+        },
+        ahmedabad: {
+            layer: "International_Airports:Sardar_vallabhai_Patel_International_Airport_Ahmadabad_Gujarath",
+            coords: [23.0727, 72.6266],
+            zoom: 14.5
+        }
+    };
+
+    document.getElementById('airportSelect').addEventListener('change', function () {
+        const selectedKey = this.value;
+
+        // Remove previous layer
+        if (currentLayer) {
+            map.removeLayer(currentLayer);
+        }
+
+        if (selectedKey && airportData[selectedKey]) {
+            const airport = airportData[selectedKey];
+
+            // Zoom to airport location
+            map.setView(airport.coords, airport.zoom);
+
+            // Load WMS layer
+            currentLayer = L.tileLayer.wms("http://localhost:8585/geoserver/International_Airports/wms", {
+                layers: airport.layer,
+                format: 'image/png',
+                transparent: true,
+                attribution: "Airport GIS Data"
+            }).addTo(map);
+        }
+    });
+</script>
+
+</body>
+</html>
